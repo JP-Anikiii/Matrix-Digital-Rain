@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マトリックス・デジタル・レイン</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            font-family: monospace;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        
+        // キャンバスのサイズを設定
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // 使用する文字（カタカナ、数字、記号など）
+        const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+-=[]{}|;:,.<>?';
+        const charArray = chars.split('');
+        
+        // 文字のサイズ
+        const fontSize = 16;
+        ctx.font = fontSize + 'px monospace';
+        
+        // 列の数を計算
+        const columns = canvas.width / fontSize;
+        
+        // 各列の現在のy位置を追跡
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = 1;
+        }
+        
+        // 各列の文字の明るさを追跡
+        const brightness = [];
+        for (let i = 0; i < columns; i++) {
+            brightness[i] = [];
+        }
+        
+        function draw() {
+            // 背景を半透明の黒で塗りつぶし（フェード効果）
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 文字を描画
+            for (let i = 0; i < drops.length; i++) {
+                // ランダムな文字を選択
+                const char = charArray[Math.floor(Math.random() * charArray.length)];
+                
+                // 最新の文字は明るい緑
+                ctx.fillStyle = '#0F0';
+                ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+                
+                // 過去の文字をより暗い緑で再描画
+                for (let j = 0; j < brightness[i].length; j++) {
+                    if (brightness[i][j] && brightness[i][j].y < canvas.height) {
+                        const alpha = brightness[i][j].alpha;
+                        ctx.fillStyle = `rgba(0, 255, 0, ${alpha})`;
+                        ctx.fillText(brightness[i][j].char, i * fontSize, brightness[i][j].y);
+                        brightness[i][j].alpha *= 0.98; // 徐々に暗くする
+                    }
+                }
+                
+                // 現在の文字を記録
+                brightness[i].push({
+                    char: char,
+                    y: drops[i] * fontSize,
+                    alpha: 0.9
+                });
+                
+                // 古い文字を削除
+                if (brightness[i].length > 20) {
+                    brightness[i].shift();
+                }
+                
+                // 文字が画面の下に達したら、ランダムな確率でリセット
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                    brightness[i] = [];
+                }
+                
+                // 次の位置へ
+                drops[i]++;
+            }
+        }
+        
+        // アニメーションループ
+        setInterval(draw, 35);
+        
+        // ウィンドウサイズ変更時の処理
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // 列数を再計算
+            const newColumns = canvas.width / fontSize;
+            
+            // 配列のサイズを調整
+            if (newColumns > drops.length) {
+                for (let i = drops.length; i < newColumns; i++) {
+                    drops[i] = 1;
+                    brightness[i] = [];
+                }
+            } else {
+                drops.length = newColumns;
+                brightness.length = newColumns;
+            }
+        });
+    </script>
+</body>
+</html>
