@@ -39,8 +39,8 @@
         const fontSize = 16;
         ctx.font = fontSize + 'px monospace';
         
-        // 列の数を計算
-        const columns = canvas.width / fontSize;
+        // 列の数を計算（最小値を1に設定）
+        const columns = Math.max(1, Math.floor(canvas.width / fontSize));
         
         // 各列の現在のy位置を追跡
         const drops = [];
@@ -109,16 +109,16 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             
-            // 列数を再計算
-            const newColumns = canvas.width / fontSize;
+            // 列数を再計算（最小値を1に設定）
+            const newColumns = Math.max(1, Math.floor(canvas.width / fontSize));
             
             // 配列のサイズを調整
             if (newColumns > drops.length) {
                 for (let i = drops.length; i < newColumns; i++) {
-                    drops[i] = 1;
+                    drops[i] = Math.floor(Math.random() * canvas.height / fontSize);
                     brightness[i] = [];
                 }
-            } else {
+            } else if (newColumns < drops.length) {
                 drops.length = newColumns;
                 brightness.length = newColumns;
             }
